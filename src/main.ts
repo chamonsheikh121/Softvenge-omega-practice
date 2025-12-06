@@ -6,6 +6,8 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import * as express from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +19,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // Serve static files from __dirname/client
+  app.use('/client', express.static(join(__dirname, '/index.html')));
 
   app.use(cookieParser());
 
@@ -37,5 +42,6 @@ async function bootstrap() {
   const port = process.env.PORT! || 3000;
   await app.listen(process.env.PORT ?? port);
   console.log(`the server running at http://localhost:${port}/api`);
+  console.log(`Open client at http://localhost:${port}/client/index.html`);
 }
 bootstrap();

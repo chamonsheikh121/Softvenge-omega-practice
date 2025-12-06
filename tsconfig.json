@@ -25,6 +25,7 @@
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "prisma"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  "assets": ["src/client/**/*"]
 }

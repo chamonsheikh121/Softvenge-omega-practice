@@ -8,14 +8,16 @@ model User {
   provider   SignInProvider @default(JWT)
   providerId String         @default("newuser")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  chatParticipants ChatParticipant[]
+  chatMessages     ChatMessage[]
 }
 
 enum SignInProvider {
-GOOGLE
-FACEBOOK
-JWT
+  GOOGLE
+  FACEBOOK
+  JWT
 }
 
 enum Role {
@@ -28,4 +30,50 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   BLOCKED
+}
+
+model Chat {
+  id           Int               @id @default(autoincrement())
+  type         ChatType
+  name         String?
+  participants ChatParticipant[]
+  messages     ChatMessage[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model ChatParticipant {
+  id                Int     @id @default(autoincrement())
+  userId            String
+  chat              Chat    @relation(fields: [chatId], references: [id])
+  chatId            Int
+  lastReadMessageId Int?
+  isMuted           Boolean @default(false)
+  user              User    @relation(fields: [userId], references: [id])
+}
+
+model ChatMessage {
+  id        Int         @id @default(autoincrement())
+  chatId    Int
+  senderId  String
+  type      MessageType @default(TEXT)
+  content   String
+  isRead    Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  chat      Chat        @relation(fields: [chatId], references: [id])
+  sender    User        @relation(fields: [senderId], references: [id])
+}
+
+enum ChatType {
+  PERSONAL
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  LINK
+  IMAGE
+  VIDEO
+  AUDIO
 }
