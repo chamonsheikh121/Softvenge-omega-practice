@@ -17,7 +17,7 @@ import {
 import { loginUserDto } from './dto/loginUser.dto';
 import { Request, Response } from 'express';
 import { forgetPassDto } from './dto/forgetPass.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { VerifyEmailDto } from './dto/OTP.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +30,16 @@ export class AuthController {
     return {
       success: true,
       message: 'user created successfully',
+      data: result,
+    };
+  }
+  @Post('verify-email')
+  async verifyEmail(@Body() VerifyEmailDto:VerifyEmailDto) {
+    const result = await this.authService.verifyOtp(VerifyEmailDto.email, VerifyEmailDto.otp);
+
+    return {
+      success: true,
+      message: 'user verified successfully',
       data: result,
     };
   }
@@ -80,40 +90,40 @@ export class AuthController {
     };
   }
 
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleSignIn() {}
+  // @Get('google')
+  // @UseGuards(AuthGuard('google'))
+  // async googleSignIn() {}
 
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleRedirect(@Req() req: Request, @Res() res: Response) {
-    const { accessToken, refreshToken } = req.user as any;
+  // @Get('google/callback')
+  // @UseGuards(AuthGuard('google'))
+  // googleRedirect(@Req() req: Request, @Res() res: Response) {
+  //   const { accessToken, refreshToken } = req.user as any;
 
-    res.cookie('access_token', accessToken, { httpOnly: true });
-    res.cookie('refresh_token', refreshToken, { httpOnly: true });
+  //   res.cookie('access_token', accessToken, { httpOnly: true });
+  //   res.cookie('refresh_token', refreshToken, { httpOnly: true });
 
-    return res.redirect('http://localhost:3000/auth/google/success');
-  }
+  //   return res.redirect('http://localhost:3000/auth/google/success');
+  // }
 
-  @Get('facebook')
-  @UseGuards(AuthGuard('facebook'))
-  async facebookLogin() {
-    // Redirects to Facebook login
-  }
+  // @Get('facebook')
+  // @UseGuards(AuthGuard('facebook'))
+  // async facebookLogin() {
+  //   // Redirects to Facebook login
+  // }
 
-  @Get('facebook/callback')
-  @UseGuards(AuthGuard('facebook'))
-  facebookRedirect(@Req() req: Request, @Res() res: Response) {
-    const { accessToken, refreshToken } = req.user as any;
+  // @Get('facebook/callback')
+  // @UseGuards(AuthGuard('facebook'))
+  // facebookRedirect(@Req() req: Request, @Res() res: Response) {
+  //   const { accessToken, refreshToken } = req.user as any;
 
-    // Optionally set cookies
-    res.cookie('access_token', accessToken, { httpOnly: true });
-    res.cookie('refresh_token', refreshToken, { httpOnly: true });
+  //   // Optionally set cookies
+  //   res.cookie('access_token', accessToken, { httpOnly: true });
+  //   res.cookie('refresh_token', refreshToken, { httpOnly: true });
 
-    // Redirect to frontend
-    return res.redirect(
-      process.env.FRONTEND_CALLBACK_URL ||
-        'http://localhost:3000/auth/facebook/success',
-    );
-  }
+  //   // Redirect to frontend
+  //   return res.redirect(
+  //     process.env.FRONTEND_CALLBACK_URL ||
+  //       'http://localhost:3000/auth/facebook/success',
+  //   );
+  // }
 }

@@ -34,3 +34,22 @@ export const UserStatus = {
 } as const
 
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
+
+
+export const ChatType = {
+  PERSONAL: 'PERSONAL',
+  GROUP: 'GROUP'
+} as const
+
+export type ChatType = (typeof ChatType)[keyof typeof ChatType]
+
+
+export const MessageType = {
+  TEXT: 'TEXT',
+  LINK: 'LINK',
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO',
+  AUDIO: 'AUDIO'
+} as const
+
+export type MessageType = (typeof MessageType)[keyof typeof MessageType]

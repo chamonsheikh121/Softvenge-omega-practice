@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import * as argon2 from 'argon2';
@@ -11,14 +11,26 @@ import { loginUserDto } from './dto/loginUser.dto';
 import { MailService } from '@/lib/mail/mail.service';
 import { forgetPassDto } from './dto/forgetPass.dto';
 import { IvalidateOAuthLogin } from '@/lib/signInOptions/google.strategry';
-import { SignInProvider } from 'generated/prisma/enums';
+import Redis from 'ioredis';
+import { Counter } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly redis: Redis,
+
+    @InjectMetric('otp_sent_total')
+    private readonly otpSentCounter: Counter<string>,
+
+    @InjectMetric('otp_verified_total')
+    private readonly otpVerifiedCounter: Counter<string>,
   ) {}
 
   async register(createUserDto: CreateUserDto) {
@@ -38,7 +50,42 @@ export class AuthService {
       data: { ...createUserDto, password: hash },
     });
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = `verify-email-${createUser.email}`;
+    await this.redis.set(key, otp, 'EX', 130);
+
+    this.logger.log(`OTP generated for ${createUser.email}: ${otp}`);
+    this.logger.debug(`Saved OTP in Redis key: ${key}`);
+    await this.mailService.sendOTP(createUser!.email, String(otp));
+    this.otpSentCounter.inc();
     return createUser;
+  }
+  async verifyOtp(email: string, userOtp: string) {
+    const key = `verify-email-${email}`;
+    this.logger.log(`Verifying OTP for ${email}`);
+    const storedOtp = await this.redis.get(key);
+
+    if (!storedOtp) {
+      this.logger.warn(`OTP expired or not found for ${email}`);
+      throw new BadRequestException('OTP expired or invalid');
+    }
+
+    if (storedOtp !== userOtp) {
+      this.logger.warn(`Incorrect OTP submitted for ${email}`);
+      throw new BadRequestException('Incorrect OTP');
+    }
+
+    // OTP verified → delete key
+    await this.redis.del(key);
+    this.logger.log(`OTP verified and key deleted for ${email}`);
+    this.otpVerifiedCounter.inc();
+
+    const user = await this.prisma.client.user.update({
+      where: { email },
+      data: { isVerified: true },
+    });
+
+    return user;
   }
 
   async login(loginUserDto: loginUserDto) {

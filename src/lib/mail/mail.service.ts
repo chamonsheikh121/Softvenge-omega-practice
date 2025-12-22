@@ -60,4 +60,46 @@ export class MailService {
     console.log('Password reset email sent: %s', info.messageId);
     return info;
   }
+
+  sendOTP = async (to: string, otp: string) => {
+    const mailOptions = {
+      from: `"Authentication task1" <${this.configService.get('EMAIL_USER')}>`,
+      to,
+      subject: 'Reset Your Password in 10m',
+      html: `
+     <div style="
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+  padding: 20px;
+  text-align: center;
+  border-radius: 8px;
+  max-width: 400px;
+  margin: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+">
+  <h2 style="color: #333;">Hello {${to}},</h2>
+  <p style="color: #555; font-size: 16px;">Use the following OTP to verify your email:</p>
+  <div style="
+    display: inline-block;
+    padding: 15px 25px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #4CAF50;
+    border-radius: 5px;
+    letter-spacing: 4px;
+    margin: 20px 0;
+  ">
+    ${otp}
+  </div>
+  <p style="color: #999; font-size: 12px;">This OTP is valid for 5 minutes.</p>
+</div>
+
+    `,
+    };
+
+    const info = await this.transporter.sendMail(mailOptions);
+    console.log('OTP sent to : %s', to);
+    return info;
+  };
 }

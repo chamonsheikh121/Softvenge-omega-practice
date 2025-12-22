@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.1.0",
   "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
   "activeProvider": "postgresql",
-  "inlineSchema": "model Post {\n  id    String @unique @default(cuid())\n  title String\n}\n\n// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id         String         @id @default(uuid())\n  name       String\n  email      String         @unique\n  password   String?\n  role       Role           @default(USER)\n  status     UserStatus     @default(ACTIVE)\n  provider   SignInProvider @default(JWT)\n  providerId String         @default(\"newuser\")\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nenum SignInProvider {\n  GOOGLE\n  FACEBOOK\n  JWT\n}\n\nenum Role {\n  USER\n  ADMIN\n  SUPER_ADMIN\n}\n\nenum UserStatus {\n  ACTIVE\n  INACTIVE\n  BLOCKED\n}\n",
+  "inlineSchema": "model Post {\n  id    String @unique @default(cuid())\n  title String\n}\n\n// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id         String         @id @default(uuid())\n  name       String\n  email      String         @unique\n  isVerified Boolean        @default(false)\n  password   String?\n  role       Role           @default(USER)\n  status     UserStatus     @default(ACTIVE)\n  provider   SignInProvider @default(JWT)\n  providerId String         @default(\"newuser\")\n\n  createdAt        DateTime          @default(now())\n  updatedAt        DateTime          @updatedAt\n  chatParticipants ChatParticipant[]\n  chatMessages     ChatMessage[]\n}\n\nenum SignInProvider {\n  GOOGLE\n  FACEBOOK\n  JWT\n}\n\nenum Role {\n  USER\n  ADMIN\n  SUPER_ADMIN\n}\n\nenum UserStatus {\n  ACTIVE\n  INACTIVE\n  BLOCKED\n}\n\nmodel Chat {\n  id           Int               @id @default(autoincrement())\n  type         ChatType\n  name         String?\n  participants ChatParticipant[]\n  messages     ChatMessage[]\n  createdAt    DateTime          @default(now())\n  updatedAt    DateTime          @updatedAt\n}\n\nmodel ChatParticipant {\n  id                Int     @id @default(autoincrement())\n  userId            String\n  chat              Chat    @relation(fields: [chatId], references: [id])\n  chatId            Int\n  lastReadMessageId Int?\n  isMuted           Boolean @default(false)\n  user              User    @relation(fields: [userId], references: [id])\n}\n\nmodel ChatMessage {\n  id        Int         @id @default(autoincrement())\n  chatId    Int\n  senderId  String\n  type      MessageType @default(TEXT)\n  content   String\n  isRead    Boolean     @default(false)\n  createdAt DateTime    @default(now())\n  updatedAt DateTime    @updatedAt\n  chat      Chat        @relation(fields: [chatId], references: [id])\n  sender    User        @relation(fields: [senderId], references: [id])\n}\n\nenum ChatType {\n  PERSONAL\n  GROUP\n}\n\nenum MessageType {\n  TEXT\n  LINK\n  IMAGE\n  VIDEO\n  AUDIO\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -28,7 +28,7 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"UserStatus\"},{\"name\":\"provider\",\"kind\":\"enum\",\"type\":\"SignInProvider\"},{\"name\":\"providerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isVerified\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"Role\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"UserStatus\"},{\"name\":\"provider\",\"kind\":\"enum\",\"type\":\"SignInProvider\"},{\"name\":\"providerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"chatParticipants\",\"kind\":\"object\",\"type\":\"ChatParticipant\",\"relationName\":\"ChatParticipantToUser\"},{\"name\":\"chatMessages\",\"kind\":\"object\",\"type\":\"ChatMessage\",\"relationName\":\"ChatMessageToUser\"}],\"dbName\":null},\"Chat\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"type\",\"kind\":\"enum\",\"type\":\"ChatType\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"participants\",\"kind\":\"object\",\"type\":\"ChatParticipant\",\"relationName\":\"ChatToChatParticipant\"},{\"name\":\"messages\",\"kind\":\"object\",\"type\":\"ChatMessage\",\"relationName\":\"ChatToChatMessage\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"ChatParticipant\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"chat\",\"kind\":\"object\",\"type\":\"Chat\",\"relationName\":\"ChatToChatParticipant\"},{\"name\":\"chatId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"lastReadMessageId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"isMuted\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ChatParticipantToUser\"}],\"dbName\":null},\"ChatMessage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"chatId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"senderId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"enum\",\"type\":\"MessageType\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isRead\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"chat\",\"kind\":\"object\",\"type\":\"Chat\",\"relationName\":\"ChatToChatMessage\"},{\"name\":\"sender\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ChatMessageToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -193,6 +193,36 @@ export interface PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.chat`: Exposes CRUD operations for the **Chat** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Chats
+    * const chats = await prisma.chat.findMany()
+    * ```
+    */
+  get chat(): Prisma.ChatDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.chatParticipant`: Exposes CRUD operations for the **ChatParticipant** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChatParticipants
+    * const chatParticipants = await prisma.chatParticipant.findMany()
+    * ```
+    */
+  get chatParticipant(): Prisma.ChatParticipantDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.chatMessage`: Exposes CRUD operations for the **ChatMessage** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChatMessages
+    * const chatMessages = await prisma.chatMessage.findMany()
+    * ```
+    */
+  get chatMessage(): Prisma.ChatMessageDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

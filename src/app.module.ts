@@ -14,7 +14,11 @@ import { NotificationService } from './main/notification/notification.service';
 import { RiderGateway } from './lib/locationTrackGateway/RiderGateway';
 import { NotificationGateway } from './lib/notification/notification.gateway';
 import { RiderModule } from './lib/locationTrackGateway/RiderGateway.module';
-
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { HealthCheckController } from './health-check/health-check.controller';
+import { TerminusModule } from '@nestjs/terminus';
+import Redis from 'ioredis';
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -30,8 +34,17 @@ import { RiderModule } from './lib/locationTrackGateway/RiderGateway.module';
     RiderModule,
     AuthModule,
     NotificationModule,
+    RedisModule.forRoot({
+      type: 'single',
+      url: 'redis://localhost:6379',
+    }),
+    PrometheusModule.register({
+      path: '/app-metrics',
+      defaultMetrics: { enabled: true },
+    }),
+  TerminusModule
   ],
-  controllers: [AppController, TestController],
+  controllers: [AppController, TestController, HealthCheckController],
   providers: [
     AppService,
     RiderGateway,
@@ -39,6 +52,7 @@ import { RiderModule } from './lib/locationTrackGateway/RiderGateway.module';
     ConfigService,
     NotificationService,
     NotificationGateway,
+    Redis
   ],
 })
 export class AppModule {}
