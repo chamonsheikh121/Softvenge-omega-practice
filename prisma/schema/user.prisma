@@ -1,19 +1,21 @@
 model User {
-  id         String         @id @default(uuid())
+  id         String     @id @default(uuid())
   name       String
-  email      String         @unique
-  isVerified Boolean        @default(false)
+  email      String     @unique
+  isVerified Boolean    @default(false)
   password   String?
-  role       Role           @default(USER)
-  status     UserStatus     @default(ACTIVE)
+  role       Role       @default(USER)
+  status     UserStatus @default(ACTIVE)
   provider   SignInProvider @default(JWT)
-  providerId String         @default("newuser")
+  providerId String     @default("newuser")
 
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  chatParticipants ChatParticipant[]
-  chatMessages     ChatMessage[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
+
 
 enum SignInProvider {
   GOOGLE
@@ -31,50 +33,4 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   BLOCKED
-}
-
-model Chat {
-  id           Int               @id @default(autoincrement())
-  type         ChatType
-  name         String?
-  participants ChatParticipant[]
-  messages     ChatMessage[]
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-}
-
-model ChatParticipant {
-  id                Int     @id @default(autoincrement())
-  userId            String
-  chat              Chat    @relation(fields: [chatId], references: [id])
-  chatId            Int
-  lastReadMessageId Int?
-  isMuted           Boolean @default(false)
-  user              User    @relation(fields: [userId], references: [id])
-}
-
-model ChatMessage {
-  id        Int         @id @default(autoincrement())
-  chatId    Int
-  senderId  String
-  type      MessageType @default(TEXT)
-  content   String
-  isRead    Boolean     @default(false)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  chat      Chat        @relation(fields: [chatId], references: [id])
-  sender    User        @relation(fields: [senderId], references: [id])
-}
-
-enum ChatType {
-  PERSONAL
-  GROUP
-}
-
-enum MessageType {
-  TEXT
-  LINK
-  IMAGE
-  VIDEO
-  AUDIO
 }

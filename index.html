@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NestJS Chat Test</title>
+  <style>
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; }
+    .message { margin-bottom: 5px; }
+    .message.you { color: green; }
+    .message.other { color: blue; }
+  </style>
+</head>
+<body>
+  <h2>NestJS 1-1 & Group Chat Test</h2>
+
+  <div id="messages"></div>
+  <input id="message" placeholder="Type message" />
+  <button onclick="send()">Send</button>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io('http://localhost:3003'); // Gateway port
+
+    // 1️⃣ Ask for your userId
+    const userId = prompt("Enter your user ID (1-4):");
+
+    // 2️⃣ Register user on server
+    socket.emit('register', { userId });
+
+    // 3️⃣ Ask for chat mode
+    const mode = prompt("Chat mode: 'private' or 'group'").toLowerCase();
+
+    let recipientId = null;
+    let groupId = null;
+
+    if (mode === 'private') {
+      recipientId = prompt("Enter recipient user ID:");
+    } else if (mode === 'group') {
+      groupId = prompt("Enter group ID (e.g., group_1):");
+      socket.emit('join_group', { userId, groupId });
+    }
+
+    const messagesDiv = document.getElementById('messages');
+
+    /** Display incoming messages */
+    socket.on('receive_private', (data) => {
+      const div = document.createElement('div');
+      div.className = data.from === userId ? 'message you' : 'message other';
+      div.innerHTML = `<b>${data.from === userId ? 'You' : 'User ' + data.from}:</b> ${data.message}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    socket.on('receive_group', (data) => {
+      const div = document.createElement('div');
+      div.className = data.from === userId ? 'message you' : 'message other';
+      div.innerHTML = `<b>${data.from === userId ? 'You' : 'User ' + data.from} [Group ${data.groupId}]:</b> ${data.message}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    /** Typing indicator */
+    socket.on('typing', (data) => {
+      console.log(`${data.from} is typing...`);
+    });
+
+    /** Send message */
+    function send() {
+      const msg = document.getElementById('message').value.trim();
+      if (!msg) return;
+
+      if (mode === 'private') {
+        socket.emit('private_message', {
+          senderId: userId,
+          recipientId,
+          message: msg
+        });
+        alert(`✅ Message sent to User ${recipientId}`);
+      } else if (mode === 'group') {
+        socket.emit('group_message', {
+          senderId: userId,
+          groupId,
+          message: msg
+        });
+        alert(`✅ Message sent to Group ${groupId}`);
+      }
+
+      // Show own message instantly
+      const div = document.createElement('div');
+      div.className = 'message you';
+      div.innerHTML = `<b>You:</b> ${msg}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      document.getElementById('message').value = '';
+    }
+
+    /** Optional: typing indicator */
+    document.getElementById('message').addEventListener('input', () => {
+      if (mode === 'private') {
+        const chatId = [userId, recipientId].sort().join('_');
+        socket.emit('typing', { userId, chatId });
+      } else if (mode === 'group') {
+        socket.emit('typing', { userId, groupId });
+      }
+    });
+
+  </script>
+</body>
+</html>

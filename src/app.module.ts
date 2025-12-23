@@ -19,6 +19,8 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { HealthCheckController } from './health-check/health-check.controller';
 import { TerminusModule } from '@nestjs/terminus';
 import Redis from 'ioredis';
+import { ChatGateway } from './lib/wsGateway/ws.gateway';
+
 @Module({
   imports: [
     ThrottlerModule.forRoot({
@@ -52,7 +54,8 @@ import Redis from 'ioredis';
     ConfigService,
     NotificationService,
     NotificationGateway,
-    Redis
+    Redis,
+    ChatGateway
   ],
 })
 export class AppModule {}
